@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <title>Q&A 게시판</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 32px; height: 32px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="container mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
+    <header class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-gray-800">문의하기</h1>
+      <p class="text-gray-500 mt-2">궁금한 점을 무엇이든 물어보세요.</p>
+    </header>
+
+    <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+      <h2 class="text-2xl font-semibold text-gray-700 mb-4">문의 등록</h2>
+      <form id="qna-form" novalidate>
+          <div class="flex flex-col md:flex-row gap-4 mb-4">
+              <div class="w-full md:w-[70%]">
+                  <input type="text" id="title" name="title" placeholder="제목 (필수)" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-colors">
+              </div>
+              <div class="w-full md:w-[30%]">
+                  <input type="text" id="name" name="name" placeholder="이름 (필수)" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-colors">
+              </div>
+          </div>
+          <div class="mb-4">
+              <textarea id="question" name="question" rows="4" placeholder="질문 내용을 입력하세요 (필수)..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-colors"></textarea>
+          </div>
+          <div class="flex justify-end items-center gap-4">
+              <p id="success-message" class="text-base text-blue-600 font-bold hidden">문의가 성공적으로 등록되었습니다. 빠른 시간 안에 반영하겠습니다.</p>
+              <button type="submit" id="submit-btn" class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-300 flex items-center">
+                  <span id="submit-text">문의 등록</span>
+                  <div id="submit-loader" class="loader !w-5 !h-5 !border-2 ml-2 hidden"></div>
+              </button>
+          </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+  function initializeApp() {
+    document.getElementById('qna-form').addEventListener('submit', handleFormSubmit);
+
+    // Hide success message on new input
+    ['title', 'name', 'question'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+            document.getElementById('success-message').classList.add('hidden');
+        });
+    });
+  }
+
+  function handleFormSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const titleInput = form.elements.title;
+      const nameInput = form.elements.name;
+      const questionInput = form.elements.question;
+
+      const title = titleInput.value.trim();
+      const name = nameInput.value.trim();
+      const question = questionInput.value.trim();
+      
+      document.getElementById('success-message').classList.add('hidden');
+
+      [titleInput, nameInput, questionInput].forEach(input => {
+        input.classList.remove('border-red-500', 'focus:ring-red-500');
+      });
+      
+      let firstErrorField = null;
+
+      if (!title) {
+        titleInput.classList.add('border-red-500', 'focus:ring-red-500');
+        if (!firstErrorField) firstErrorField = titleInput;
+      }
+      if (!name) {
+        nameInput.classList.add('border-red-500', 'focus:ring-red-500');
+        if (!firstErrorField) firstErrorField = nameInput;
+      }
+      if (!question) {
+        questionInput.classList.add('border-red-500', 'focus:ring-red-500');
+        if (!firstErrorField) firstErrorField = questionInput;
+      }
+
+      if (firstErrorField) {
+        firstErrorField.focus();
+        return;
+      }
+      
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      document.getElementById('submit-text').textContent = '등록 중...';
+      document.getElementById('submit-loader').classList.remove('hidden');
+      
+      const formData = { name, title, question };
+
+      google.script.run
+        .withSuccessHandler(res => {
+          submitBtn.disabled = false;
+          document.getElementById('submit-text').textContent = '문의 등록';
+          document.getElementById('submit-loader').classList.add('hidden');
+          
+          if (res && res.success === false) {
+              alert(res.message || '등록에 실패했습니다. 다시 시도해주세요.');
+          } else {
+              form.reset();
+              const successMessage = document.getElementById('success-message');
+              successMessage.classList.remove('hidden');
+              
+              setTimeout(() => {
+                  successMessage.classList.add('hidden');
+              }, 5000);
+          }
+        })
+        .withFailureHandler(err => {
+          submitBtn.disabled = false;
+          document.getElementById('submit-text').textContent = '문의 등록';
+          document.getElementById('submit-loader').classList.add('hidden');
+          handleError(err);
+        })
+        .addQuestion(formData);
+  }
+
+  function handleError(error) { 
+      console.error("오류:", error); 
+      alert('오류가 발생했습니다: ' + error.message); 
+  }
+
+  const checkGoogleAndRun = () => {
+    if (window.google && window.google.script && window.google.script.run) {
+      initializeApp();
+    } else {
+      setTimeout(checkGoogleAndRun, 100);
+    }
+  };
+
+  checkGoogleAndRun();
+</script>
+</body>
+</html>
+
