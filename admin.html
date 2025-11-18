@@ -1,0 +1,1264 @@
+
+Gemini와의 대화
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <base target="_top">
+
+  <title>관리자 페이지</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+
+    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .view-btn-active { background-color: #4f46e5; color: white; }
+
+    .details-row { display: none; }
+
+    .details-row.is-open { display: table-row; }
+
+    .modal-overlay { background-color: rgba(0, 0, 0, 0.5); }
+
+  </style>
+
+</head>
+
+<body class="bg-gray-100 font-sans">
+
+
+
+  <div id="login-view" class="min-h-screen flex items-center justify-center">
+
+    <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-sm">
+
+      <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">관리자 로그인</h2>
+
+      <form id="login-form">
+
+        <div class="mb-4">
+
+          <label for="adminId" class="block text-sm font-medium text-gray-700">아이디</label>
+
+          <input type="text" id="adminId" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+
+        </div>
+
+        <div class="mb-6">
+
+          <label for="adminPassword" class="block text-sm font-medium text-gray-700">비밀번호</label>
+
+          <input type="password" id="adminPassword" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+
+        </div>
+
+        <p id="login-error" class="text-red-500 text-sm text-center mb-4 hidden"></p>
+
+        <button type="submit" id="login-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+
+          <span id="login-btn-text">로그인</span>
+
+          <div id="login-loader" class="loader !w-5 !h-5 !border-2 hidden"></div>
+
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+
+  <div id="admin-view" class="hidden p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+
+    <header class="flex justify-between items-center mb-6">
+
+        <h1 class="text-3xl font-bold text-gray-800">관리자 페이지</h1>
+
+        <button id="logout-btn" class="text-sm text-gray-500 hover:text-indigo-600">로그아웃</button>
+
+    </header>
+
+    <div class="border-b border-gray-200">
+
+      <nav class="flex space-x-2" aria-label="Tabs">
+
+        <button id="tab-qna" class="tab-btn py-3 px-6 font-bold text-sm rounded-t-lg transition-colors bg-white text-indigo-600">Q&A 관리</button>
+
+        <button id="tab-rag" class="tab-btn py-3 px-6 font-bold text-sm rounded-t-lg transition-colors text-gray-500 bg-gray-100 hover:bg-gray-200">RAG 관리</button>
+
+        <button id="tab-stats" class="tab-btn py-3 px-6 font-bold text-sm rounded-t-lg transition-colors text-gray-500 bg-gray-100 hover:bg-gray-200">사용통계</button>
+
+      </nav>
+
+    </div>
+
+    <div class="mt-0">
+
+      <div id="content-qna" class="tab-content bg-white p-6 rounded-b-xl rounded-tr-xl shadow-md">
+
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+
+            <div class="relative flex-grow w-full md:w-auto">
+
+                <input type="search" id="searchInput" placeholder="제목, 이름, 내용으로 검색..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+
+                </div>
+
+            </div>
+
+            <div class="flex items-center gap-4 w-full md:w-auto">
+
+                <div class="flex items-center gap-2">
+
+                    <label for="sortSelect" class="text-sm font-medium text-gray-700 shrink-0">정렬:</label>
+
+                    <select id="sortSelect" class="border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm py-2">
+
+                        <option value="newest">최신순</option>
+
+                        <option value="oldest">오래된순</option>
+
+                    </select>
+
+                </div>
+
+                <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-md">
+
+                    <button id="view-card-btn" class="view-btn p-2 rounded-md" title="카드 뷰">
+
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+
+                    </button>
+
+                    <button id="view-list-btn" class="view-btn p-2 rounded-md view-btn-active" title="리스트 뷰">
+
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="qna-list-container"></div>
+
+        <div id="qna-loader" class="flex justify-center py-8"><div class="loader"></div></div>
+
+      </div>
+
+      <div id="content-rag" class="tab-content hidden bg-white p-6 rounded-b-xl rounded-tr-xl shadow-md">
+
+          <h3 class="text-xl font-semibold text-gray-700 mb-4">RAG DB 관리</h3>
+
+          <div class="space-y-6">
+
+            <div class="p-4 border rounded-lg">
+
+                <h4 class="font-medium text-gray-800 mb-3">콘텐츠 관리</h4>
+
+                <div class="flex flex-wrap gap-3">
+
+                    <button id="create-rag-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium py-2 px-4 rounded-lg text-sm">새로 작성</button>
+
+                    <button id="update-rag-btn" class="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium py-2 px-4 rounded-lg text-sm">업데이트</button>
+
+                </div>
+
+                 <p class="text-xs text-gray-500 mt-2">※ '새로 작성' 및 '업데이트' 기능은 추후 추가될 예정입니다.</p>
+
+            </div>
+
+            <div class="p-4 border rounded-lg">
+
+                <h4 class="font-medium text-gray-800 mb-3">카테고리 관리</h4>
+
+                <div class="flex flex-col sm:flex-row sm:items-center sm:gap-3 space-y-3 sm:space-y-0">
+
+                    <div class="flex-grow flex items-center gap-3">
+
+                      <select id="rag-category-select" class="block w-full border-gray-300 rounded-md shadow-sm text-sm py-2">
+
+                        <option>카테고리 선택</option>
+
+                      </select>
+
+                      <button id="delete-category-btn" class="bg-red-500 text-white hover:bg-red-600 font-medium py-2 px-4 rounded-lg text-sm whitespace-nowrap">선택 카테고리 삭제</button>
+
+                    </div>
+
+                    <button id="add-category-btn" class="bg-indigo-500 text-white hover:bg-indigo-600 font-medium py-2 px-4 rounded-lg text-sm whitespace-nowrap">새 카테고리 추가</button>
+
+                </div>
+
+                <p id="rag-category-message" class="text-red-600 font-bold text-sm mt-2 hidden"></p>
+
+            </div>
+
+            <div class="p-4 border border-red-200 bg-red-50 rounded-lg">
+
+                <h4 class="font-medium text-red-800 mb-3">위험 영역</h4>
+
+                <p class="text-sm text-red-700 mb-3">주의: 이 작업은 되돌릴 수 없습니다. RAG DB의 모든 데이터를 영구적으로 삭제합니다.</p>
+
+                <button id="delete-all-rag-btn" class="bg-red-600 text-white hover:bg-red-700 font-bold py-2 px-4 rounded-lg text-sm">전체 데이터 삭제</button>
+
+                <button id="create-all-rag-btn" class="bg-green-600 text-white hover:bg-green-700 font-bold py-2 px-4 rounded-lg text-sm">전체 데이터 생성</button>
+
+            </div>
+
+          </div>
+
+      </div>
+
+      <div id="content-stats" class="tab-content hidden bg-white p-6 rounded-b-xl rounded-tr-xl shadow-md">
+
+        <div id="stats-loader" class="flex justify-center py-8"><div class="loader"></div></div>
+
+        <div id="stats-container" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            <div class="bg-gray-50 p-6 rounded-xl border">
+
+                <h3 class="font-semibold text-gray-700 text-lg">챗봇 이용 현황</h3>
+
+                <div class="mt-4 space-y-3 text-gray-600">
+
+                    <p class="flex justify-between"><span>오늘</span> <span id="stats-today" class="font-bold text-lg text-indigo-600">0</span></p>
+
+                    <p class="flex justify-between"><span>이번 주</span> <span id="stats-week" class="font-bold text-lg text-indigo-600">0</span></p>
+
+                    <p class="flex justify-between"><span>이번 달</span> <span id="stats-month" class="font-bold text-lg text-indigo-600">0</span></p>
+
+                    <p class="flex justify-between"><span>올해</span> <span id="stats-year" class="font-bold text-lg text-indigo-600">0</span></p>
+
+                </div>
+
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-xl border">
+
+                <h3 class="font-semibold text-gray-700 text-lg">Q&A 처리 현황</h3>
+
+                <div class="h-40 w-40 mx-auto mt-4"><canvas id="qnaChart"></canvas></div>
+
+                <div class="text-center mt-2 text-sm text-gray-600">
+
+                    총 <span id="stats-qna-total" class="font-bold">0</span>건
+
+                </div>
+
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-xl border md:col-span-2">
+
+                <h3 class="font-semibold text-gray-700 text-lg">카테고리별 질문 수</h3>
+
+                <div class="h-64 mt-4"><canvas id="categoryChart"></canvas></div>
+
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-xl border md:col-span-2 lg:col-span-4">
+
+                 <h3 class="font-semibold text-gray-700 text-lg">학과별 질문 수</h3>
+
+                 <div class="h-80 mt-4"><canvas id="departmentChart"></canvas></div>
+
+            </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <div id="confirm-modal" class="fixed inset-0 z-50 modal-overlay items-center justify-center hidden">
+
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+
+      <h3 id="confirm-modal-title" class="text-lg font-bold text-gray-900"></h3>
+
+      <p id="confirm-modal-text" class="mt-2 text-sm text-gray-600"></p>
+
+      <div class="mt-6 flex justify-end gap-3">
+
+        <button id="confirm-modal-cancel" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300">취소</button>
+
+        <button id="confirm-modal-confirm" class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700">확인</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+   <div id="add-category-modal" class="fixed inset-0 z-50 modal-overlay items-center justify-center hidden">
+
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+
+      <h3 class="text-lg font-bold text-gray-900">새 카테고리 추가</h3>
+
+      <p class="mt-2 text-sm text-gray-600 mb-4">추가할 새 카테고리 이름을 입력하세요. 이 카테고리로 기본 데이터가 생성됩니다.</p>
+
+      <input type="text" id="new-category-name" placeholder="예: 도서관 이용" class="w-full border-gray-300 rounded-md shadow-sm text-sm">
+
+      <p id="add-category-error" class="text-red-500 text-xs mt-1 hidden"></p>
+
+      <div class="mt-6 flex justify-end gap-3">
+
+        <button id="add-category-cancel" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300">취소</button>
+
+        <button id="add-category-confirm" class="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">추가</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+<script>
+
+// =================================================================
+
+// 1. 전역 변수 및 초기화
+
+// =================================================================
+
+let allQnaData = [];
+
+let currentViewMode = 'list';
+
+let chartInstances = {};
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  // 코어 이벤트 리스너
+
+  document.getElementById('login-form').addEventListener('submit', handleLogin);
+
+  document.getElementById('logout-btn').addEventListener('click', handleLogout);
+
+  document.getElementById('tab-qna').addEventListener('click', () => switchTab('qna'));
+
+  document.getElementById('tab-rag').addEventListener('click', () => switchTab('rag'));
+
+  document.getElementById('tab-stats').addEventListener('click', () => switchTab('stats'));
+
+
+
+  // Q&A 탭 이벤트 리스너
+
+  document.getElementById('searchInput').addEventListener('input', applyFiltersAndSort);
+
+  document.getElementById('sortSelect').addEventListener('change', applyFiltersAndSort);
+
+  document.getElementById('view-card-btn').addEventListener('click', () => switchViewMode('card'));
+
+  document.getElementById('view-list-btn').addEventListener('click', () => switchViewMode('list'));
+
+
+
+  // RAG 탭 이벤트 리스너
+
+  document.getElementById('delete-all-rag-btn').addEventListener('click', handleDeleteAllRAG);
+
+  document.getElementById('create-all-rag-btn').addEventListener('click', handleCreateAllRAG);
+
+  document.getElementById('delete-category-btn').addEventListener('click', handleDeleteCategory);
+
+  document.getElementById('add-category-btn').addEventListener('click', () => showModal('add-category-modal'));
+
+  document.getElementById('add-category-confirm').addEventListener('click', handleAddCategoryConfirm);
+
+ 
+
+  // 모달 이벤트 리스너
+
+  document.getElementById('confirm-modal-cancel').addEventListener('click', () => hideModal('confirm-modal'));
+
+  document.getElementById('add-category-cancel').addEventListener('click', () => hideModal('add-category-modal'));
+
+});
+
+
+
+
+
+// =================================================================
+
+// 2. 코어 기능 (로그인, 로그아웃, 탭 전환)
+
+// =================================================================
+
+function handleLogin(e) {
+
+    e.preventDefault();
+
+    const id = document.getElementById('adminId').value;
+
+    const password = document.getElementById('adminPassword').value;
+
+    const errorEl = document.getElementById('login-error');
+
+    const loginBtn = document.getElementById('login-btn');
+
+    setButtonLoading(loginBtn, true);
+
+
+
+    google.script.run
+
+        .withSuccessHandler(response => {
+
+            setButtonLoading(loginBtn, false);
+
+            if (response.success) {
+
+                document.getElementById('login-view').classList.add('hidden');
+
+                document.getElementById('admin-view').classList.remove('hidden');
+
+                loadQnaData();
+
+                loadStatisticsData();
+
+            } else {
+
+                errorEl.textContent = response.message || '로그인에 실패했습니다.';
+
+                errorEl.classList.remove('hidden');
+
+            }
+
+        })
+
+        .withFailureHandler(err => {
+
+            handleError(err, '로그인 중 오류가 발생했습니다.');
+
+            setButtonLoading(loginBtn, false);
+
+            errorEl.classList.remove('hidden');
+
+        })
+
+        .checkAdminCredentials({ id, password });
+
+}
+
+
+
+function handleLogout() {
+
+    document.getElementById('admin-view').classList.add('hidden');
+
+    document.getElementById('login-view').classList.remove('hidden');
+
+    document.getElementById('adminPassword').value = '';
+
+    Object.values(chartInstances).forEach(chart => chart.destroy());
+
+    chartInstances = {};
+
+}
+
+
+
+function switchTab(tabName) {
+
+    const activeClasses = ['bg-white', 'text-indigo-600'];
+
+    const inactiveClasses = ['text-gray-500', 'bg-gray-100', 'hover:bg-gray-200'];
+
+
+
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+
+    document.querySelectorAll('.tab-btn').forEach(button => {
+
+        button.classList.remove(...activeClasses);
+
+        button.classList.add(...inactiveClasses);
+
+    });
+
+
+
+    document.getElementById(`content-${tabName}`).classList.remove('hidden');
+
+    const activeTab = document.getElementById(`tab-${tabName}`);
+
+    activeTab.classList.remove(...inactiveClasses);
+
+    activeTab.classList.add(...activeClasses);
+
+
+
+    if (tabName === 'rag') loadRAGCategories();
+
+}
+
+
+
+
+
+// =================================================================
+
+// 3. Q&A 관리 탭 기능
+
+// =================================================================
+
+function loadQnaData() {
+
+    document.getElementById('qna-loader').classList.remove('hidden');
+
+    document.getElementById('qna-list-container').innerHTML = '';
+
+    google.script.run
+
+      .withSuccessHandler(qnaData => {
+
+         document.getElementById('qna-loader').classList.add('hidden');
+
+         allQnaData = qnaData || [];
+
+         applyFiltersAndSort();
+
+      })
+
+      .withFailureHandler(err => {
+
+        document.getElementById('qna-loader').classList.add('hidden');
+
+        handleError(err, 'Q&A 데이터를 불러오는 데 실패했습니다.');
+
+      })
+
+      .getQnaDataForAdmin();
+
+}
+
+
+
+function applyFiltersAndSort() {
+
+    let processedData = [...allQnaData];
+
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+    if (searchTerm) {
+
+        processedData = processedData.filter(item => (item.title && item.title.toLowerCase().includes(searchTerm)) || (item.name && item.name.toLowerCase().includes(searchTerm)) || (item.question && item.question.toLowerCase().includes(searchTerm)));
+
+    }
+
+    const sortValue = document.getElementById('sortSelect').value;
+
+    processedData.sort((a, b) => {
+
+        const dateA = new Date(a.timestamp); const dateB = new Date(b.timestamp);
+
+        return sortValue === 'newest' ? dateB - dateA : dateA - dateB;
+
+    });
+
+    renderQnaList(processedData);
+
+}
+
+
+
+function switchViewMode(mode) {
+
+    if (mode === currentViewMode) return;
+
+    currentViewMode = mode;
+
+    document.getElementById('view-card-btn').classList.toggle('view-btn-active', mode === 'card');
+
+    document.getElementById('view-list-btn').classList.toggle('view-btn-active', mode === 'list');
+
+    applyFiltersAndSort();
+
+}
+
+
+
+function renderQnaList(data) {
+
+    const container = document.getElementById('qna-list-container');
+
+    container.innerHTML = ''; container.className = '';
+
+    if (!data || data.length === 0) { container.innerHTML = '<div class="text-center text-gray-500 py-10">해당하는 질문이 없습니다.</div>'; return; }
+
+    if (currentViewMode === 'card') {
+
+        container.className = 'space-y-4';
+
+        data.forEach(item => container.appendChild(createQnaCardElement(item)));
+
+    } else {
+
+        container.className = 'overflow-x-auto';
+
+        container.appendChild(createQnaTableElement(data));
+
+    }
+
+}
+
+
+
+function createQnaCardElement(item) {
+
+    const card = document.createElement('div');
+
+    card.className = 'bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden';
+
+    const statusColor = item.answer ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+
+    const statusText = item.answer ? '답변 완료' : '답변 대기';
+
+    const formattedDate = new Date(item.timestamp).toLocaleString('ko-KR');
+
+    card.innerHTML = `<div class="p-4 bg-gray-50 border-b border-gray-200"><div class="flex justify-between items-center"><div class="flex items-center gap-3"><span class="text-xs font-bold inline-block py-1 px-2 uppercase rounded-full ${statusColor}">${statusText}</span><h3 class="font-bold text-lg text-gray-800">${item.title}</h3></div><div class="text-right text-sm text-gray-500"><p>${item.name}</p><p>${formattedDate}</p></div></div></div><div class="p-4"><div><p class="font-semibold text-sm mb-2 text-gray-700">질문 내용</p><div class="bg-gray-50 p-3 rounded-md text-gray-800 whitespace-pre-wrap text-sm">${item.question}</div></div><div class="mt-4"><label for="answer-card-${item.rowIndex}" class="block text-sm font-medium text-gray-700 mb-1">답변 작성</label><textarea id="answer-card-${item.rowIndex}" rows="4" class="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">${item.answer || ''}</textarea></div><div class="flex justify-end items-center mt-3"><p id="save-status-card-${item.rowIndex}" class="text-sm text-green-600 mr-4 hidden">저장되었습니다!</p><button onclick="saveAnswer(this, ${item.rowIndex}, 'card')" class="save-btn px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700 flex items-center"><span>답변 저장</span><div class="loader !w-4 !h-4 !border-2 ml-2 hidden"></div></button></div></div>`;
+
+    return card;
+
+}
+
+ 
+
+function createQnaTableElement(data) {
+
+    const table = document.createElement('table');
+
+    table.className = 'w-full text-sm text-left text-gray-600';
+
+    table.innerHTML = `<thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" class="px-4 py-3 w-24">상태</th><th scope="col" class="px-4 py-3">제목</th><th scope="col" class="px-4 py-3 w-28">작성자</th><th scope="col" class="px-4 py-3 w-40">등록일</th><th scope="col" class="px-4 py-3 w-24 text-center">관리</th></tr></thead><tbody></tbody>`;
+
+    const tbody = table.querySelector('tbody');
+
+    data.forEach(item => {
+
+        const tr = document.createElement('tr');
+
+        tr.className = 'bg-white border-b hover:bg-gray-50';
+
+        const statusColor = item.answer ? 'text-green-600' : 'text-yellow-600';
+
+        const statusText = item.answer ? '답변 완료' : '답변 대기';
+
+        const formattedDate = new Date(item.timestamp).toLocaleString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+        tr.innerHTML = `<td class="px-4 py-3 font-bold ${statusColor}">${statusText}</td><td class="px-4 py-3 font-semibold text-gray-800">${item.title}</td><td class="px-4 py-3">${item.name}</td><td class="px-4 py-3">${formattedDate}</td><td class="px-4 py-3 text-center"><button onclick="toggleDetailsRow(this)" class="text-indigo-600 hover:text-indigo-800">보기</button></td>`;
+
+        tbody.appendChild(tr);
+
+        const detailsTr = document.createElement('tr');
+
+        detailsTr.className = 'details-row';
+
+        detailsTr.innerHTML = `<td colspan="5" class="p-0"><div class="p-4 bg-indigo-50 border-t-2 border-indigo-200"><p class="font-semibold text-sm mb-2 text-gray-800">질문 내용</p><p class="mb-4 bg-white p-3 rounded-md text-gray-700 whitespace-pre-wrap text-sm">${item.question}</p><div class="mt-4"><label for="answer-list-${item.rowIndex}" class="block text-sm font-medium text-gray-800 mb-1">답변 작성</label><textarea id="answer-list-${item.rowIndex}" rows="3" class="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">${item.answer || ''}</textarea></div><div class="flex justify-end items-center mt-3"><p id="save-status-list-${item.rowIndex}" class="text-sm text-green-600 mr-4 hidden">저장되었습니다!</p><button onclick="saveAnswer(this, ${item.rowIndex}, 'list')" class="save-btn px-4 py-1.5 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700 flex items-center"><span>답변 저장</span><div class="loader !w-4 !h-4 !border-2 ml-2 hidden"></div></button></div></div></td>`;
+
+        tbody.appendChild(detailsTr);
+
+    });
+
+    return table;
+
+}
+
+ 
+
+function toggleDetailsRow(button) {
+
+    const tr = button.closest('tr');
+
+    const detailsTr = tr.nextElementSibling;
+
+    const isOpen = detailsTr.classList.toggle('is-open');
+
+    button.textContent = isOpen ? '닫기' : '보기';
+
+}
+
+
+
+function saveAnswer(button, rowIndex, viewType) {
+
+    const answer = document.getElementById(`answer-${viewType}-${rowIndex}`).value;
+
+    const statusEl = document.getElementById(`save-status-${viewType}-${rowIndex}`);
+
+    statusEl.classList.add('hidden');
+
+    setButtonLoading(button, true);
+
+    google.script.run
+
+      .withSuccessHandler(res => {
+
+        setButtonLoading(button, false);
+
+        if (res.success) {
+
+          statusEl.classList.remove('hidden');
+
+          setTimeout(() => statusEl.classList.add('hidden'), 3000);
+
+          const itemIndex = allQnaData.findIndex(item => item.rowIndex === rowIndex);
+
+          if(itemIndex > -1) allQnaData[itemIndex].answer = answer;
+
+          applyFiltersAndSort();
+
+        } else {
+
+          alert(res.message || '저장에 실패했습니다.');
+
+        }
+
+      })
+
+      .withFailureHandler(err => {
+
+        setButtonLoading(button, false);
+
+        handleError(err, '저장 중 오류가 발생했습니다.');
+
+      })
+
+      .updateAnswer({ rowIndex, answer });
+
+}
+
+
+
+
+
+// =================================================================
+
+// 4. RAG 관리 탭 기능
+
+// =================================================================
+
+function loadRAGCategories() {
+
+    const selectEl = document.getElementById('rag-category-select');
+
+    selectEl.innerHTML = '<option>로드 중...</option>';
+
+    google.script.run
+
+        .withSuccessHandler(categories => {
+
+            selectEl.innerHTML = '<option value="">-- 카테고리 선택 --</option>';
+
+            if (categories && categories.length > 0) {
+
+                categories.forEach(cat => {
+
+                    const option = document.createElement('option');
+
+                    option.value = cat;
+
+                    option.textContent = cat;
+
+                    selectEl.appendChild(option);
+
+                });
+
+            } else {
+
+                selectEl.innerHTML = '<option>사용 가능한 카테고리 없음</option>';
+
+            }
+
+        })
+
+        .withFailureHandler(err => {
+
+            handleError(err, 'RAG 카테고리를 불러오지 못했습니다.');
+
+            selectEl.innerHTML = '<option>오류 발생</option>';
+
+        })
+
+        .getRAGCategories();
+
+}
+
+
+
+function handleDeleteAllRAG() {
+
+    showModal('confirm-modal', {
+
+        title: '전체 데이터 삭제 확인',
+
+        text: '정말로 RAG DB의 모든 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+
+        onConfirm: () => {
+
+            setButtonLoading(document.getElementById('confirm-modal-confirm'), true);
+
+            google.script.run
+
+                .withSuccessHandler(res => {
+
+                    setButtonLoading(document.getElementById('confirm-modal-confirm'), false);
+
+                    if(res.success) alert('모든 RAG 데이터가 삭제되었습니다.');
+
+                    else alert('삭제에 실패했습니다: ' + res.message);
+
+                    hideModal('confirm-modal');
+
+                })
+
+                .withFailureHandler(err => {
+
+                    handleError(err, '전체 데이터 삭제 중 오류 발생');
+
+                    setButtonLoading(document.getElementById('confirm-modal-confirm'), false);
+
+                    hideModal('confirm-modal');
+
+                })
+
+                .deleteAllRAGData();
+
+        }
+
+    });
+
+}
+
+
+
+function handleCreateAllRAG() {
+    showModal('confirm-modal', {
+        title: '전체 데이터 재생성 확인',
+        text: '기존의 모든 RAG 데이터를 삭제하고 새로 생성합니다. 이 작업은 되돌릴 수 없으며, 시간이 다소 소요될 수 있습니다. 계속하시겠습니까?',
+        confirmButtonClass: 'bg-green-600 hover:bg-green-700',
+        onConfirm: () => {
+            const confirmBtn = document.getElementById('confirm-modal-confirm');
+            setButtonLoading(confirmBtn, true);
+            
+            // 1. 데이터 삭제
+            google.script.run
+                .withSuccessHandler(deleteRes => {
+                    if (deleteRes.success) {
+                        // 2. 삭제 성공 시 데이터 생성
+                        google.script.run
+                            .withSuccessHandler(createRes => {
+                                setButtonLoading(confirmBtn, false);
+                                if (createRes.success) {
+                                    alert('모든 RAG 데이터가 성공적으로 재생성되었습니다.');
+                                } else {
+                                    alert('데이터 생성에 실패했습니다: ' + (createRes.message || '알 수 없는 오류'));
+                                }
+                                hideModal('confirm-modal');
+                            })
+                            .withFailureHandler(err => {
+                                handleError(err, '데이터 생성 중 오류가 발생했습니다.');
+                                setButtonLoading(confirmBtn, false);
+                                hideModal('confirm-modal');
+                            })
+                            .createAllRAGData();
+                    } else {
+                        // 삭제 실패 처리
+                        setButtonLoading(confirmBtn, false);
+                        alert('기존 데이터 삭제에 실패했습니다: ' + (deleteRes.message || '알 수 없는 오류'));
+                        hideModal('confirm-modal');
+                    }
+                })
+                .withFailureHandler(err => {
+                    handleError(err, '기존 데이터 삭제 중 오류가 발생했습니다.');
+                    setButtonLoading(confirmBtn, false);
+                    hideModal('confirm-modal');
+                })
+                .deleteAllRAGData();
+        }
+    });
+}
+
+
+
+function handleDeleteCategory() {
+
+    const selectEl = document.getElementById('rag-category-select');
+
+    const categoryToDelete = selectEl.value;
+
+    if (!categoryToDelete) {
+
+        alert('먼저 삭제할 카테고리를 선택해주세요.');
+
+        return;
+
+    }
+
+    showTemporaryMessage('rag-category-message', '삭제 중...', false);
+
+    google.script.run
+
+        .withSuccessHandler(res => {
+
+            if(res.success) {
+
+                showTemporaryMessage('rag-category-message', `'${categoryToDelete}' 카테고리 삭제 완료. ${res.message}`);
+
+                loadRAGCategories();
+
+            } else {
+
+                showTemporaryMessage('rag-category-message', '삭제 실패: ' + res.message, true);
+
+            }
+
+        })
+
+        .withFailureHandler(err => {
+
+            handleError(err, '카테고리 삭제 중 오류 발생');
+
+        })
+
+        .deleteRAGCategory(categoryToDelete);
+
+}
+
+
+
+function handleAddCategoryConfirm() {
+
+    const inputEl = document.getElementById('new-category-name');
+
+    const errorEl = document.getElementById('add-category-error');
+
+    const confirmBtn = document.getElementById('add-category-confirm');
+
+    const newCategoryName = inputEl.value.trim();
+
+
+
+    if (!newCategoryName) {
+
+        errorEl.textContent = '카테고리 이름을 입력하세요.';
+
+        errorEl.classList.remove('hidden');
+
+        return;
+
+    }
+
+    errorEl.classList.add('hidden');
+
+    setButtonLoading(confirmBtn, true);
+
+
+
+    google.script.run
+
+        .withSuccessHandler(res => {
+
+            setButtonLoading(confirmBtn, false);
+
+            if (res.success) {
+
+                showTemporaryMessage('rag-category-message', `생성완료: '${newCategoryName}' 카테고리가 추가되었습니다.`);
+
+                inputEl.value = '';
+
+                hideModal('add-category-modal');
+
+                loadRAGCategories();
+
+            } else {
+
+                errorEl.textContent = res.message || '추가에 실패했습니다.';
+
+                errorEl.classList.remove('hidden');
+
+            }
+
+        })
+
+        .withFailureHandler(err => {
+
+            handleError(err, '카테고리 추가 중 오류 발생');
+
+            setButtonLoading(confirmBtn, false);
+
+        })
+
+        .addEmptyRAGEntryWithCategory(newCategoryName);
+
+}
+
+
+
+
+
+// =================================================================
+
+// 5. 사용통계 탭 기능
+
+// =================================================================
+
+function loadStatisticsData() {
+
+    document.getElementById('stats-loader').classList.remove('hidden');
+
+    document.getElementById('stats-container').classList.add('hidden');
+
+    google.script.run
+
+      .withSuccessHandler(stats => {
+
+        document.getElementById('stats-loader').classList.add('hidden');
+
+        document.getElementById('stats-container').classList.remove('hidden');
+
+        renderStatistics(stats);
+
+      })
+
+      .withFailureHandler(err => {
+
+        document.getElementById('stats-loader').classList.add('hidden');
+
+        handleError(err, '통계 데이터를 불러오는 데 실패했습니다.');
+
+      })
+
+      .getStatisticsData();
+
+}
+
+
+
+function renderStatistics(stats) {
+
+    if (!stats) return;
+
+    if (stats.accessCounts) {
+
+        document.getElementById('stats-today').textContent = stats.accessCounts.today || 0;
+
+        document.getElementById('stats-week').textContent = stats.accessCounts.week || 0;
+
+        document.getElementById('stats-month').textContent = stats.accessCounts.month || 0;
+
+        document.getElementById('stats-year').textContent = stats.accessCounts.year || 0;
+
+    }
+
+    if (stats.qnaStats) {
+
+        document.getElementById('stats-qna-total').textContent = stats.qnaStats.total || 0;
+
+        const qnaCtx = document.getElementById('qnaChart').getContext('2d');
+
+        if (chartInstances.qna) chartInstances.qna.destroy();
+
+        chartInstances.qna = new Chart(qnaCtx, {
+
+            type: 'doughnut',
+
+            data: {
+
+                labels: [`답변 완료 (${stats.qnaStats.answered || 0})`, `미응답 (${stats.qnaStats.unanswered || 0})`],
+
+                datasets: [{ data: [stats.qnaStats.answered, stats.qnaStats.unanswered], backgroundColor: ['#10B981', '#F59E0B'], borderColor: '#fff', borderWidth: 2 }]
+
+            },
+
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+
+        });
+
+    }
+
+    if (stats.categoryCounts) {
+
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+
+        const categoryData = Object.entries(stats.categoryCounts).sort((a, b) => b[1] - a[1]);
+
+        if (chartInstances.category) chartInstances.category.destroy();
+
+        chartInstances.category = new Chart(categoryCtx, {
+
+            type: 'bar',
+
+            data: { labels: categoryData.map(d => d[0]), datasets: [{ label: '질문 수', data: categoryData.map(d => d[1]), backgroundColor: '#6366F1' }] },
+
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+
+        });
+
+    }
+
+    if (stats.departmentCounts) {
+
+        const departmentCtx = document.getElementById('departmentChart').getContext('2d');
+
+        const departmentData = Object.entries(stats.departmentCounts).sort((a, b) => b[1] - a[1]);
+
+        if (chartInstances.department) chartInstances.department.destroy();
+
+        chartInstances.department = new Chart(departmentCtx, {
+
+            type: 'bar',
+
+            data: { labels: departmentData.map(d => d[0]), datasets: [{ label: '질문 수', data: departmentData.map(d => d[1]), backgroundColor: '#A78BFA' }] },
+
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+
+        });
+
+    }
+
+}
+
+
+
+
+
+// =================================================================
+
+// 6. 공유 헬퍼 기능 (모달, 버튼 로딩, 에러 처리 등)
+
+// =================================================================
+
+function setButtonLoading(button, isLoading) {
+
+    const textSpan = button.querySelector('span');
+
+    const loader = button.querySelector('.loader');
+
+    button.disabled = isLoading;
+
+    if (isLoading) {
+
+        if(textSpan) textSpan.classList.add('hidden');
+
+        if(loader) loader.classList.remove('hidden');
+
+    } else {
+
+        if(textSpan) textSpan.classList.remove('hidden');
+
+        if(loader) loader.classList.add('hidden');
+
+    }
+
+}
+
+
+
+function showTemporaryMessage(elementId, message, isError = false, duration = 5000) {
+
+    const el = document.getElementById(elementId);
+
+    el.textContent = message;
+
+    el.classList.toggle('text-green-600', !isError);
+
+    el.classList.toggle('text-red-600', isError);
+
+    el.classList.remove('hidden');
+
+    setTimeout(() => {
+
+        el.classList.add('hidden');
+
+    }, duration);
+
+}
+
+
+
+function showModal(modalId, options = {}) {
+
+    const modal = document.getElementById(modalId);
+
+    if (modalId === 'confirm-modal') {
+
+        document.getElementById('confirm-modal-title').textContent = options.title || '확인';
+
+        document.getElementById('confirm-modal-text').textContent = options.text || '';
+
+        const confirmBtn = document.getElementById('confirm-modal-confirm');
+
+        const newBtn = confirmBtn.cloneNode(true);
+
+        confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+
+        if (options.onConfirm) newBtn.addEventListener('click', options.onConfirm);
+
+    }
+
+    modal.classList.remove('hidden');
+
+    modal.classList.add('flex');
+
+}
+
+
+
+function hideModal(modalId) {
+
+    document.getElementById(modalId).classList.add('hidden');
+
+    document.getElementById(modalId).classList.remove('flex');
+
+}
+
+ 
+
+function handleError(err, defaultMessage = '알 수 없는 오류가 발생했습니다.') {
+
+    const errorMessage = err ? (err.message || JSON.stringify(err)) : defaultMessage;
+
+    alert(`오류: ${errorMessage}`);
+
+    console.error('Error:', err);
+
+}
+
+
+
+</script>
+
+</body>
+
+</html>
