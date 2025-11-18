@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <base target="_top">  /*모바일에서 전체화면 표시 코드 */
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>혜전대학교 AI 학사상담</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        /* --- 1. 전역 변수 및 기본 스타일 --- */
+        :root {
+            --background-start: #ffffff;
+            --background-end: #f8fafc;
+            --card-background: rgba(255, 255, 255, 0.95);
+            --border-color: rgba(0, 51, 102, 0.15); 
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --accent-color: #003366; 
+            --error-color: #ef4444;
+            --gradient-bg: #003366;
+            --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --soft-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gradient-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            padding: 1rem;
+        }
+
+        /* --- 2. 배경 애니메이션 --- */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: move-dots 20s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes move-dots {
+            from { transform: translate(0, 0); }
+            to { transform: translate(50px, 50px); }
+        }
+        
+        /* --- 3. 레이아웃 및 컨테이너 --- */
+        .container {
+            max-width: 100%;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        /* ▼▼▼ 새로 추가된 CSS ▼▼▼ */
+        .admin-link-container {
+            width: 100%;
+            text-align: right;
+            margin-bottom: 0.5rem;
+        }
+        .admin-link-container a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+        .admin-link-container a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+        /* ▲▲▲ CSS 추가 끝 ▲▲▲ */
+
+
+        /* --- 4. 헤더 --- */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fade-in-down 0.8s ease-out;
+        }
+
+        .ai-icon img {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            box-shadow: var(--soft-shadow);
+            background: white;
+            padding: 0.5rem;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* --- 5. 메인 폼 카드 --- */
+        .form-card {
+            background: var(--card-background);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--card-shadow);
+            animation: fade-in-up 0.8s 0.2s ease-out both;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+        .form-section h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+        }
+        
+        /* --- 6. 폼 요소 (Input, Select, Textarea) --- */
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: var(--soft-shadow);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.2), var(--soft-shadow);
+            transform: translateY(-1px);
+        }
+
+        .form-group select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11.5a.5.5 0 0 1-.354-.146l-4-4a.5.5 0 0 1 .708-.708L8 10.293l3.646-3.647a.5.5 0 0 1 .708.708l-4 4A.5.5 0 0 1 8 11.5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            cursor: pointer;
+            padding-right: 3rem;
+        }
+        
+        .form-group textarea {
+            min-height: 6rem;
+            resize: vertical;
+        }
+
+        /* --- 7. 라디오 버튼 그룹 (상담 주제) --- */
+        .radio-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-item {
+            position: relative;
+        }
+
+        .radio-item input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        .radio-item label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: white;
+            border: 1px solid rgba(0, 51, 102, 0.2);
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            min-height: 3rem;
+            margin: 0;
+        }
+
+        .radio-item input[type="radio"]:checked + label {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 51, 102, 0.3);
+        }
+
+        .radio-item label:hover {
+            border-color: var(--accent-color);
+            background: rgba(0, 51, 102, 0.05);
+        }
+
+        .radio-item input[type="radio"]:checked + label:hover {
+            background: #002855; /* A darker shade of accent for hover */
+        }
+        
+        /* 실제 라디오 버튼은 화면에서 숨깁니다. */
+        #cat11 {
+            display: none;
+        }
+
+        /* '학생식당 메뉴' 라벨(버튼)의 기본 스타일을 지정합니다. */
+        label[for="cat11"] {
+            background-color: #007bff;  /* 배경색 (파란색 계열) */
+            color: white;               /* 글자색 (흰색) */
+            padding: 10px 15px;         /* 버튼 내부 여백 */
+            border-radius: 5px;         /* 모서리를 둥글게 */
+            cursor: pointer;            /* 마우스 커서를 손가락 모양으로 변경 */
+            font-weight: bold;          /* 글자를 굵게 */
+            transition: background-color 0.2s; /* 색상이 부드럽게 변하는 효과 */
+        }
+
+        /* 버튼에 마우스를 올렸을 때 스타일을 변경합니다. */
+        label[for="cat11"]:hover {
+            background-color: #0056b3;  /* 배경색을 조금 더 어둡게 */
+        }
+        
+        /* ▼▼▼ 새로 추가된 CSS ▼▼▼ */
+        /* '제안&오류 사항' 버튼 숨김 및 스타일 추가 */
+        #cat12 {
+            display: none;
+        }
+        label[for="cat12"] {
+            background-color: #f43f5e; /* 배경색 (파란색 계열) */
+            color: white;               /* 글자색 (흰색) */
+            padding: 10px 15px;         /* 버튼 내부 여백 */
+            border-radius: 5px;         /* 모서리를 둥글게 */
+            cursor: pointer;            /* 마우스 커서를 손가락 모양으로 변경 */
+            font-weight: bold;          /* 글자를 굵게 */
+            transition: background-color 0.2s; /* 색상이 부드럽게 변하는 효과 */
+        }
+        label[for="cat12"]:hover {
+            background-color: #0056b3; /* 배경색을 조금 더 어둡게 */
+        }
+        /* ▲▲▲ CSS 추가 끝 ▲▲▲ */
+
+
+        /* --- 8. 자주 묻는 질문 태그 --- */
+        .frequent-questions {
+            margin-bottom: 1.5rem;
+        }
+        
+        .frequent-questions h4 {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+        }
+
+        .question-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            min-height: 2.25rem;
+            align-items: center;
+        }
+
+        .question-tag {
+            background: rgba(0, 51, 102, 0.08);
+            border: 1px solid rgba(0, 51, 102, 0.2);
+            border-radius: 1rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8125rem;
+            color: var(--accent-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: tag-fade-in 0.5s ease forwards;
+        }
+
+        .question-tag:hover {
+            background: rgba(0, 51, 102, 0.15);
+            transform: translateY(-1px);
+            border-color: var(--accent-color);
+        }
+        
+        .question-tag-placeholder {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            padding: 0.5rem 0.75rem;
+            width: 100%;
+            text-align: center;
+            animation: tag-fade-in 0.5s ease forwards;
+        }
+
+        @keyframes tag-fade-in {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- 9. 질문 입력 및 버튼 --- */
+        .char-counter {
+            text-align: right;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            margin-top: 2rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 1rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            box-shadow: var(--soft-shadow);
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+            box-shadow: 0 6px 20px -5px rgba(0, 51, 102, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 51, 102, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            font-size: 0.875rem;
+        }
+
+        .btn-secondary:hover {
+            background: var(--background-end);
+            transform: translateY(-1px);
+            color: var(--text-primary);
+        }
+        
+        /* --- 10. 동적 상태 표시 (로딩, 에러, 결과) --- */
+        #form-validation-error {
+            display: none;
+            color: var(--error-color);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1.25rem;
+            margin-top: -1rem;
+        }
+        
+        .loading, .error {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            border-radius: 0.75rem;
+        }
+        
+        .spinner {
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 3px solid rgba(0, 51, 102, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading span, .error span {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .result-section {
+            display: none;
+            margin-top: 2rem;
+            animation: fade-in-up 0.8s ease-out;
+        }
+
+        .result-card {
+            background: var(--card-background);
+            backdrop-filter: blur(20px);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--card-shadow);
+        }
+        
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .result-icon img {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background: white;
+            padding: 0.5rem;
+            box-shadow: var(--soft-shadow);
+        }
+
+        .result-header h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        
+        .result-content {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            border: 1px solid var(--border-color);
+            font-size: 0.9375rem;
+            box-shadow: var(--soft-shadow);
+            line-height: 1.7;
+        }
+
+        /* --- 11. 디버그 로그 --- */
+        #log-container {
+            display: none;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--soft-shadow);
+        }
+        
+        #log-container h3 {
+            color: var(--accent-color);
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        #log-container pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'JetBrains Mono', monospace, 'Pretendard';
+            font-size: 0.75rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        
+        #languageSelect {
+            width: 50%;      /* 기본 너비의 절반 */
+            min-width: 120px; /* 최소 너비 지정 가능 */
+        }
+                
+        /* --- 12. 반응형 미디어 쿼리 --- */
+        @media (min-width: 576px) {
+            body { padding: 1.5rem; }
+            .container { max-width: 540px; }
+            .form-card, .result-card { padding: 2rem; }
+            .input-row { grid-template-columns: 1fr 1fr; }
+            .radio-group { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (min-width: 768px) {
+            body { padding: 2rem; }
+            .container { max-width: 720px; }
+            .radio-group { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        @media (max-width: 575px) {
+            .radio-group { grid-template-columns: 1fr; gap: 0.5rem; }
+        }
+
+        @media (max-width: 480px) {
+            .radio-item label { padding: 0.75rem 0.875rem; font-size: 0.8rem; min-height: 2.75rem; }
+            .button-group { grid-template-columns: 1fr; gap: 0.75rem; }
+        }
+
+        /* --- 13. 애니메이션 키프레임 --- */
+        @keyframes fade-in-down {
+            from { opacity: 0; transform: translateY(-1.25rem); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(1.25rem); }
+            to { opacity: 1; transform: translateY(0); }
+        } 
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ▼▼▼ 새로 추가된 HTML ▼▼▼ -->
+        <div class="admin-link-container">
+            <a href="#" onclick="openAdminPage(event)">관리자</a>
+        </div>
+        <!-- ▲▲▲ HTML 추가 끝 ▲▲▲ -->
+
+        <header class="header">
+            <h1>AI 학사상담</h1>
+            <p class="subtitle">혜전대학교 학생들을 위한 AI 챗봇</p>
+        </header>
+
+        <main class="form-card">
+            <section class="form-section">
+                <h3><span class="section-icon">🎓</span>학생 정보를 입력해주세요</h3>
+                <div class="input-row">
+                    <div class="form-group">
+                        <label for="admissionYear">입학연도</label>
+                        <input type="text" id="admissionYear" placeholder="예: 2024" maxlength="4">
+                    </div>
+                    <div class="form-group">
+                        <label for="department">학과</label>
+                        <select id="department">
+                            <option value="">학과를 선택하세요</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="form-section">
+                <h3><span class="section-icon">🏷️</span>상담 주제를 선택하세요</h3>
+                <div class="radio-group">
+                    <div class="radio-item"><input type="radio" id="cat1" name="category" value="학사일정"><label for="cat1">학사일정</label></div>
+                    <div class="radio-item"><input type="radio" id="cat2" name="category" value="휴학, 복학, 전과, 제적 등"><label for="cat2">학적변동(휴학,복학,전과 등)</label></div>
+                    <div class="radio-item"><input type="radio" id="cat3" name="category" value="졸업학점, 성적, 학점"><label for="cat3">학점관련/총 졸업학점</label></div>
+                    <div class="radio-item"><input type="radio" id="cat4" name="category" value="장학"><label for="cat4">장학관련</label></div>
+                    <div class="radio-item"><input type="radio" id="cat5" name="category" value="현장실습, 인턴십"><label for="cat5">국내외 현장실습/인턴십</label></div>
+                    <div class="radio-item"><input type="radio" id="cat6" name="category" value="출석, 결석"><label for="cat6">출결관련</label></div>
+                    <div class="radio-item"><input type="radio" id="cat7" name="category" value="수강신청, 재수강, 학점이수"><label for="cat7">수강신청/재수강/필수학점</label></div>
+                    <div class="radio-item"><input type="radio" id="cat8" name="category" value="등록금"><label for="cat8">등록금</label></div>
+                    <div class="radio-item"><input type="radio" id="cat9" name="category" value="전화번호"><label for="cat9">연락처</label></div>
+                    <div class="radio-item"><input type="radio" id="cat10" name="category" value="기타"><label for="cat10">기타</label></div>
+                    <div class="radio-item"><input type="radio" id="cat11" name="category" value="학생식당 메뉴" onclick="window.open('https://www.hj.ac.kr/hj/na/ntt/selectNttList.do?mi=200000316&bbsId=1010524', '_blank');"><label for="cat11">학생식당 메뉴(새창열기)</label></div>
+                    
+                    <div class="radio-item">
+                        <input type="radio" id="cat12" name="category" value="QNA" onclick="openQnaBoard()">
+                        <label for="cat12">제안&오류 등록(새창열기)</label>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="form-section">
+                    <h3><span class="section-icon">🌐</span>언어 선택</h3>
+                    <div class="form-group">
+                        <select class="form-control" id="languageSelect">
+                            <option value="ko">한국어 (Korean)</option>
+                            <option value="vi">베트남어 (Vietnamese)</option>
+                            <option value="mn">몽골어 (Mongolian)</option>
+                            <option value="uz">우즈베키스탄어 (Uzbek)</option>
+                            <option value="ky">키르기스어 (Kyrgyz)</option>
+                            <option value="tg">타지크어 (Tajik)</option>
+                            <option value="th">태국어 (Thai)</option>
+                            <option value="my">미얀마어 (Burmese)</option>
+                            <option value="ar">아랍어 (Arabic)</option>
+                            <option value="zh">중국어 (Chinese)</option>
+                            <option value="zh-CN">중국어(간체) (Chinese, Simplified)</option>
+                            <option value="ru">러시아어 (Russian)</option>
+                            <option value="kk">카자흐어 (Kazakh)</option>
+                        </select>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h3><span class="section-icon">✍️</span>궁금한 내용을 질문해주세요</h3>
+                    
+                    <div class="frequent-questions">
+                        <h4><span class="section-icon"></span>자주 묻는 질문❓</h4>
+                        <div class="question-tags" id="questionTags">
+                            </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <textarea id="question" class="form-control" placeholder="예: 2025학년도 1학기 등록금 납부 기간을 알려주세요." maxlength="500"></textarea>
+                        <div class="char-counter" id="charCounter">0 / 500</div>
+                    </div>
+                </section>
+            
+            <div id="form-validation-error"></div>
+
+            <div class="button-group">
+                <button type="button" class="btn btn-primary" id="submitBtn">
+                    <i class="fas fa-paper-plane"></i>
+                    <span id="submitText"> AI에게 질문하기</span>
+                </button>
+                <button type="button" class="btn btn-secondary" id="resetBtn">
+                    <i class="fas fa-rotate-right"></i> 초기화
+                </button>
+            </div>
+        </main>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <span>AI가 답변을 생성하고 있습니다...</span>
+        </div>
+        
+        <div class="error" id="error">
+             <span id="errorMessage"></span>
+        </div>
+
+        <section class="result-section" id="resultSection">
+            <div class="result-card">
+                <div class="result-header">
+                    <h3>AI의 답변</h3>
+                </div>
+                <div class="result-content" id="resultContent"></div>
+            </div>
+        </section>
+
+        <div id="log-container">
+            <h3>디버그 로그</h3>
+            <pre id="log-content"></pre>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ---------------------------------------------------------------------
+         * AI 학사상담 웹 앱 스크립트
+         * ---------------------------------------------------------------------
+         */
+
+        // --- 1. DOM 요소 캐싱 ---
+        const admissionYearInput = document.getElementById('admissionYear');
+        const departmentSelect = document.getElementById('department');
+        const questionTextarea = document.getElementById('question');
+        const submitBtn = document.getElementById('submitBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultSection = document.getElementById('resultSection');
+        const resultContent = document.getElementById('resultContent');
+        const charCounter = document.getElementById('charCounter');
+        const submitText = document.getElementById('submitText');
+        const logContainer = document.getElementById('log-container');
+        const logContent = document.getElementById('log-content');
+        const questionTagsContainer = document.getElementById('questionTags');
+        const formValidationError = document.getElementById('form-validation-error');
+
+        // --- 2. 데이터 ---
+        const frequentQuestionsData = {
+            '학사일정': ['다음 학기 개강일은?', '이번 학기 방학 시작일', '기말고사 기간 알려줘'],
+            '휴학, 복학, 전과, 제적 등': ['일반휴학은 최대 몇 번 가능한가요?', '학사경고를 받으면 어떻게 되나요?', '전과 신청 시기와 조건 알려줘', '복학 신청 기간'],
+            '졸업학점, 성적, 학점': ['졸업하려면 몇 학점 들어야 하나요?', '질병, 사고 등에 의한 추가시험 신청방법은?', '성적평가 비율과 성적 등급은 어떻게 되나요?'],
+            '장학': ['신입생이 받을 수 있는 장학금 알려줘', '재학생 성적우수장학금 종류는?', '가족, 형제가 같이 다니면 장학금 있나요?', '토익 잘하면 주는 장학금 있나요?'],
+            '현장실습, 인턴십': ['현장실습은 몇 학년부터 신청 가능한가요?', '현장실습도 돈(실습지원비)을 받나요?', '국외(해외) 인턴십 지원 자격 알려줘', '인턴십은 몇 학점 인정되나요?'],
+            '출석, 결석': ['결석 F학점 기준', '공결(출석인정) 사유', '결석 허용 일수'],
+            '수강신청, 재수강, 학점이수': ['한 학기에 몇 학점까지 신청 가능한가요?', '재수강 신청 조건', '수강신청 정정 기간'],
+            '등록금': ['학과별 등록금', '등록금 분할 납부', '등록금 환불 규정', '초과학기 등록금'],
+            '전화번호': ['교무팀 연락처', '학생팀 전화번호', '학과 사무실 번호'],
+            '기타': ['증명서 발급 방법', '도서관 이용시간']
+        };
+
+        // --- 3. 초기화 및 이벤트 리스너 ---
+        /**
+         * 다국어 선택 리스트 박스 (이 부분은 submitQuestion 함수로 로직이 통합되었습니다.)
+         */
+        // document.getElementById("submitBtn").addEventListener("click", function() { ... });
+
+        /**
+         * 페이지가 로드될 때 실행되는 초기화 함수
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            addEventListeners();
+            loadDepartments();
+            updateFrequentQuestions(null); // 초기 상태에서는 플레이스홀더 표시
+            admissionYearInput.value = new Date().getFullYear();
+            admissionYearInput.focus();
+        });
+
+        /**
+         * 모든 이벤트 리스너를 등록하는 함수
+         */
+        function addEventListeners() {
+            submitBtn.addEventListener('click', submitQuestion);
+            resetBtn.addEventListener('click', resetForm);
+            
+            questionTextarea.addEventListener('input', function() {
+                const length = this.value.length;
+                charCounter.textContent = `${length} / 500`;
+                charCounter.style.color = length > 450 ? 'var(--error-color)' : length > 400 ? '#f59e0b' : 'var(--text-secondary)';
+            });
+
+            admissionYearInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+
+            questionTextarea.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    e.preventDefault();
+                    submitQuestion();
+                }
+            });
+
+            document.querySelectorAll('input[name="category"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        updateFrequentQuestions(this.value);
+                    }
+                });
+            });
+        }
+        
+        // --- 4. 핵심 기능 함수 ---
+
+        /**
+         * 고유한 세션 ID를 가져오거나 생성합니다.
+         */
+        function getSessionId() {
+            let sessionId = localStorage.getItem('hyejeonAiChatSessionId');
+            if (!sessionId) {
+                sessionId = crypto.randomUUID();
+                localStorage.setItem('hyejeonAiChatSessionId', sessionId);
+            }
+            return sessionId;
+        }
+
+        /**
+         * 선택된 카테고리에 맞는 '자주 묻는 질문' 태그를 동적으로 생성합니다.
+         */
+        function updateFrequentQuestions(category) {
+            questionTagsContainer.innerHTML = ''; 
+            if (!category || category === 'QNA') { // QNA 버튼 클릭 시 태그 숨김
+                const placeholder = document.createElement('span');
+                placeholder.className = 'question-tag-placeholder';
+                placeholder.innerHTML = '<span class="highlight-text">상담주제를 선택하면 AI답변에 도움이 됩니다.</span>';
+                questionTagsContainer.appendChild(placeholder);
+                return;
+            }
+            const questions = frequentQuestionsData[category] || [];
+            questions.forEach((q, index) => {
+                const tag = document.createElement('span');
+                tag.className = 'question-tag';
+                tag.textContent = q;
+                tag.setAttribute('data-question', q);
+                tag.style.animationDelay = `${index * 0.05}s`;
+                questionTagsContainer.appendChild(tag);
+            });
+            addTagClickListeners();
+        }
+
+        /**
+         * '자주 묻는 질문' 태그에 클릭 이벤트를 추가합니다.
+         */
+        function addTagClickListeners() {
+            document.querySelectorAll('.question-tag').forEach(tag => {
+                tag.addEventListener('click', function() {
+                    let questionText = this.getAttribute('data-question');
+                    if (questionText === '학과 사무실 번호') {
+                        const selectedDepartment = departmentSelect.value;
+                        if (selectedDepartment) {
+                            questionText = `${selectedDepartment} 사무실 전화번호`;
+                        } else {
+                            alert('먼저 학과를 선택하시면 더 정확한 질문을 만들 수 있습니다.');
+                            departmentSelect.focus();
+                            return;
+                        }
+                    }
+                    questionTextarea.value = questionText;
+                    questionTextarea.dispatchEvent(new Event('input')); 
+                    questionTextarea.focus();
+                });
+            });
+        }
+        
+        /**
+         * Google Apps Script를 호출하여 학과 목록을 가져옵니다.
+         */
+        function loadDepartments() {
+            google.script.run
+                .withSuccessHandler(populateDepartments)
+                .withFailureHandler(handleDepartmentLoadError)
+                .getDepartmentList();
+        }
+
+        /**
+         * 학과 목록 로드 성공 시 select 엘리먼트에 옵션을 추가합니다.
+         */
+        function populateDepartments(departments) {
+            departmentSelect.innerHTML = '<option value="">학과를 선택하세요</option>';
+            departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept;
+                option.textContent = dept;
+                departmentSelect.appendChild(option);
+            });
+        }
+
+        /**
+         * 학과 목록 로드 실패 시 에러를 처리합니다.
+         */
+        function handleDepartmentLoadError(err) {
+            console.error('학과 목록 로드 실패:', err);
+            showError('학과 목록을 불러오는 데 실패했습니다. 페이지를 새로고침 해주세요.');
+        }
+
+        /**
+         * Q&A 게시판을 새 창으로 엽니다.
+         */
+        function openQnaBoard() {
+            const label = document.querySelector('label[for="cat12"]');
+            const originalText = label.textContent;
+            label.textContent = '여는 중...';
+
+            google.script.run
+                .withSuccessHandler(function(baseUrl) {
+                    const qnaUrl = baseUrl + '?page=qna';
+                    window.open(qnaUrl, '_blank');
+                    label.textContent = originalText;
+                    document.getElementById('cat12').checked = false; 
+                })
+                .withFailureHandler(function(err) {
+                    alert('게시판 주소를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
+                    console.error('getWebAppUrl 실패:', err);
+                    label.textContent = originalText;
+                })
+                .getWebAppUrl();
+        }
+        
+        /**
+         * ▼▼▼ 새로 추가된 JavaScript 함수 ▼▼▼
+         * 관리자 페이지를 새 창으로 엽니다.
+         */
+        function openAdminPage(event) {
+            event.preventDefault(); // 링크의 기본 동작(페이지 이동)을 막습니다.
+            const link = event.target;
+            const originalText = link.textContent;
+            link.textContent = '여는 중...';
+
+            google.script.run
+                .withSuccessHandler(function(baseUrl) {
+                    const adminUrl = baseUrl + '?page=admin';
+                    window.open(adminUrl, '_blank');
+                    link.textContent = originalText;
+                })
+                .withFailureHandler(function(err) {
+                    alert('관리자 페이지 주소를 불러오는 데 실패했습니다.');
+                    console.error('getWebAppUrl 실패:', err);
+                    link.textContent = originalText;
+                })
+                .getWebAppUrl();
+        }
+        /* ▲▲▲ JavaScript 함수 추가 끝 ▲▲▲ */
+
+        /**
+         * 사용자가 입력한 질문을 서버로 제출합니다.
+         */
+        function submitQuestion() {
+            formValidationError.style.display = 'none';
+            
+            const admissionYear = admissionYearInput.value.trim();
+            const department = departmentSelect.value;
+            const category = document.querySelector('input[name="category"]:checked')?.value;
+            const question = questionTextarea.value.trim();
+            const sessionId = getSessionId();
+            const selectedLang = document.getElementById("languageSelect").value;
+
+            if (!admissionYear || !department) {
+                formValidationError.textContent = '입학연도와 학과를 먼저 선택해주세요.';
+                formValidationError.style.display = 'block';
+                return;
+            }
+            if (!category || !question) {
+                formValidationError.textContent = '상담 주제를 선택하고, 질문을 입력해주세요.';
+                formValidationError.style.display = 'block';
+                return;
+            }
+
+            setLoadingState(true);
+            hideError();
+            hideResult();
+            logContainer.style.display = 'none';
+
+            google.script.run
+                .withFailureHandler(handleError)
+                .withSuccessHandler(handleSuccess)
+                .processQuestion({ admissionYear, department, category, question, sessionId, selectedLang});
+        }
+
+        // --- 5. 서버 응답 처리 함수 ---
+
+        function handleSuccess(response) {
+            setLoadingState(false);
+            if (response.success) {
+                showResult(response.answer);
+            } else {
+                showError(response.error || '알 수 없는 오류가 발생했습니다.');
+            }
+            if (response.debugLogs && Array.isArray(response.debugLogs) && response.debugLogs.length > 0) {
+                logContent.textContent = response.debugLogs.join('\n\n');
+                logContainer.style.display = 'block';
+                logContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+        }
+
+        function handleError(err) {
+            setLoadingState(false);
+            console.error('Error:', err);
+            showError(err.message || '서버와 통신 중 문제가 발생했습니다.');
+        }
+
+        // --- 6. UI 상태 관리 함수 ---
+
+        function setLoadingState(isLoading) {
+            loading.style.display = isLoading ? 'flex' : 'none';
+            submitBtn.disabled = isLoading;
+            submitText.textContent = isLoading ? '처리중...' : 'AI에게 질문하기';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            error.style.display = 'flex';
+        }
+
+        function hideError() {
+            error.style.display = 'none';
+        }
+
+        function showResult(answer) {
+            resultContent.innerHTML = answer.replace(/\n/g, '<br>');
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+
+        function hideResult() {
+            resultSection.style.display = 'none';
+        }
+
+        function resetForm() {
+            admissionYearInput.value = new Date().getFullYear();
+            departmentSelect.value = '';
+            questionTextarea.value = '';
+            
+            const checkedRadio = document.querySelector('input[name="category"]:checked');
+            if (checkedRadio) {
+                checkedRadio.checked = false;
+            }
+            
+            charCounter.textContent = '0 / 500';
+            charCounter.style.color = 'var(--text-secondary)';
+            
+            updateFrequentQuestions(null);
+            hideError();
+            hideResult();
+            logContainer.style.display = 'none';
+            formValidationError.style.display = 'none';
+            
+            admissionYearInput.focus();
+        }
+    </script>
+
+</body>
+</html>
